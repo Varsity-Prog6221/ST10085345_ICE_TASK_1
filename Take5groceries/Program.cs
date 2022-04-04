@@ -6,59 +6,98 @@ namespace Take5groceries
     {
         static void Main(string[] args)
         {
-            string exit = "n";
+            //declerations
+            ConsoleKeyInfo cki;
             Item item = new Item();
             Cart cart = new Cart();
+            string welcomeMsg = " __________________________________________ \n" +
+                                "|       Welcome to Take 5 Groceries!       |\n" +
+                                "|==========================================|\n" +
+                                "|   Start   |  Press <Enter>               |\n" +
+                                "|==========================================|\n" +
+                                "|   Cancel  |  Press <Esc>                 |\n" +
+                                "|==========================================|\n" +
+                                "|   Exit    |  Press <F4>                  |\n" +
+                                "|__________________________________________|";
+            //creates an empty cart, displays start up message and waits for user input
             cart.newCart();
-            Console.WriteLine("Press enter to continue...or type 'exit' to exit at any time");
-            exit = Console.ReadLine();
-            while (exit.Contains("exit") == false)
+            Console.WriteLine(welcomeMsg);
+            cki = Console.ReadKey(true);
+
+            //while-loop to continuously run program (main logic)
+
+            while (checkExit(cki).Equals("Exit") == false)
             {
-                Console.WriteLine("Welcome to Take 5 Groceries!\n\n");
-                string iName;
-                double iPrice;
+                //declare input variables
+                string iName = "";
+                double iPrice = 0.0;
+                //item counter
                 int i = 0;
-                    while(i < 5 && exit.Equals("exit") == false)
+
+                //while-loop to add 5 items to cart or exit on user demand
+
+                while (i < 5 && checkExit(cki).Equals("Enter") == true)
                 {
-                    string temp;
-                    Console.WriteLine("Please enter an item name : ");
-                    temp = Console.ReadLine();
-                    if (temp.Contains("exit"))
-                    {
-                        exit = "exit";
-                        break;
-                    }
-                    iName = temp;
-                    Console.WriteLine("Please enter the price of the " + iName +" : ");
+                    //item name
+                    Console.WriteLine("Please enter item number {0}'s name : ", (i+1));
+                    iName = Console.ReadLine();
+
+                    //item price
+                    Console.WriteLine("Please enter the price of the " + iName + " : ");
+                    //try-catch for string => double conversion
                     try
                     {
-                        temp = Console.ReadLine();
-                        if (temp.Contains("exit"))
-                        {
-                            exit = "exit";
-                            break;
-                        }
-                        iPrice = Convert.ToDouble(temp);
+                        string priceInput = Console.ReadLine();
+                        iPrice = Convert.ToDouble(priceInput);
+                        //adds item to cart
                         item.newItem(iName, iPrice, i, cart);
                         i++;
+                        if (i < 5)
+                        {
+                            Console.WriteLine("|=========================================================|\n" +
+                                              "|    Press <Enter> to add next item or <Esc> to cancel    |\n" +
+                                              "|=========================================================|\n");
+                            cki = Console.ReadKey(true);
+                        }
                     }
-                    catch (Exception)
+                    catch (Exception exE)
                     {
-                        Console.WriteLine("Oops, it seems as if you have entered an invalid price, please try again");
-                        i--;
+                        Console.WriteLine("|=====================================================|\n" +
+                                          "|                        Error :                      |\n" +
+                                          "|=====================================================|\n" +
+                                          exE + "\n" +
+                                          "|=====================================================|\n" +
+                                          "|   Press enter to re-add last item or Esc to cancel  |\n" +
+                                          "|=====================================================|\n");
+                        iPrice = 0.0;
+                        cki = Console.ReadKey(true);
                     }
                 }
-                if (exit.Contains("exit")==false)
+                //checks for exit before output
+                if (checkExit(cki).Equals("Enter") == true)
                 {
+                    //display cart
                     Console.WriteLine(cart.ToString());
+                    Console.WriteLine("Press enter to continue...");
+                    Console.ReadLine();
                 }
-                Console.WriteLine("\nWould you like to continue ? y/n : ");
-                exit = Console.ReadLine();
-                if (exit.Contains("n"))
-                {
-                    exit = "exit";
-                    break;
-                }
+                Console.WriteLine(welcomeMsg);
+                cki = Console.ReadKey(true);
+            }
+        }
+        public static string checkExit(ConsoleKeyInfo cki)
+        {
+            if (cki.Key == ConsoleKey.F4)
+            {
+                return "Exit";
+            }
+            else if (cki.Key == ConsoleKey.Escape)
+            {
+                return "Cancel";
+            }
+            else
+            {
+                return "Enter";
             }
         }
     }
@@ -93,20 +132,68 @@ namespace Take5groceries
             itemPrices[index] = itemPrice;
             total = total + itemPrice;
             totalVat = total * vatRate;
+        } public string addSpace(int numOfSpaces, string fill)
+        {
+            string spaces = "";
+            for (int i = 0; i < numOfSpaces; i++)
+            {
+                spaces = spaces + fill;
+            }
+            return spaces;
         }
         public override string ToString()
         {
-            totalVat = Math.Round((totalVat*100.0))/100.0;
-            string output = "\n\nThank you, here is your cart details :\n";
+            string fill =          "|------------------------------------------------|\n";//50 chars
+            string ends =          "|================================================|\n";
+            string output = ends + "|     Thank you, here are your cart details      |\n" + fill;
+            string column1, column2, line = "";
+            int totalLineChars = fill.Length - 2;
+            int col2Chars = 17;
+            int usedChars = 0;
             for (int i = 0; i < 5; i++)
             {
-                output = output + itemNames[i] + "\t\t: R " + itemPrices[i] + "\n";
+                column1 = "|  " + itemNames[i];
+                column2 = itemPrices[i] + "  |";
+
+                usedChars = column2.Length-2;
+
+                column2 = "|  R" + addSpace((col2Chars-usedChars),".") + column2;
+
+                usedChars = column1.Length + column2.Length;
+                //spacing maths
+                int middle = 0;
+                if (usedChars > totalLineChars)
+                {
+                    column1 = column1 + addSpace(totalLineChars-column1.Length," ") + "|\n|";
+                    middle = totalLineChars - column2.Length;
+                } else
+                {
+                    middle = totalLineChars - usedChars + 1;
+                }
+                line = column1 + addSpace(middle," ") + column2 + "\n";
+                output = output + line;
             }
-            output = output + "----------------------\n";
-            output = output + "Total       : R " + total + "\n";
-            output = output + "Total VAT   : R " + totalVat + "\n";
-            output = output + "----------------------\n";
-            output = output + "Grand Total : R\t" + (totalVat + total )+ "\n";
+            totalVat = Math.Round((totalVat * 100.0)) / 100.0;
+            total = Math.Round((total * 100.0)) / 100.0;
+            output = output + fill;
+            //total
+            line = "|  Total" + addSpace(19, " ") + "|  R";
+            output = output + line;
+            usedChars = line.Length + (total + "").Length + 2;
+            line = addSpace(totalLineChars - usedChars, ".") + total + "  |\n";
+            output = output + line;
+            //total vat
+            line = "|  Total VAT" + addSpace(15, " ") + "|  R";
+            output = output + line;
+            usedChars = line.Length + (totalVat + "").Length + 2;
+            line = addSpace(totalLineChars - usedChars, ".") + totalVat + "  |\n";
+            output = output + line + ends;
+            //grand total
+            total = Math.Round(((totalVat + total) * 100.0)) / 100.0;
+            line = "|  Grand Total" + addSpace(13, " ") + "|  R";
+            output = output + line; usedChars = line.Length + (total + "").Length + 2;
+            line = addSpace(totalLineChars - usedChars, ".") + total + "  |\n";
+            output = output + line + ends;
             return output;
         }
     }
